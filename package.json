@@ -1,5 +1,5 @@
 {
-  "name": "xmind-kityminder",
+  "name": "xmind-parser",
   "version": "1.0.0",
   "description": "Full-fidelity bidirectional converter between XMind (.xmind) and KityMinder (.km) JSON formats. Supports XMind 8 (XML) and XMind 2020+ (JSON), covering hyperlinks, notes, images, labels, markers, priority, progress, and styles.",
   "type": "module",
@@ -26,19 +26,19 @@
     "km",
     "naotu"
   ],
-  "author": "",
+  "author": "ljheee",
   "license": "MIT",
   "engines": {
     "node": ">=14.8.0"
   },
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "https://github.com/ljheee/xmind-parser.git"
   },
   "bugs": {
-    "url": ""
+    "url": "https://github.com/ljheee/xmind-parser/issues"
   },
-  "homepage": "",
+  "homepage": "https://github.com/ljheee/xmind-parser#readme",
   "dependencies": {
     "@xmldom/xmldom": "^0.9.9"
   }

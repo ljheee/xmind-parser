@@ -194,7 +194,7 @@ function buildTopicJson(node, isRoot = false) {
 function buildMetadataJson() {
   return {
     creator: {
-      name: 'xmind-kityminder',
+      name: 'xmind-parser',
       version: '1.0.0',
     },
     created: new Date().toISOString(),

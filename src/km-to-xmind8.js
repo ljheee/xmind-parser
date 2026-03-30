@@ -215,7 +215,7 @@ function buildStylesXml() {
 function buildMetaXml() {
   return `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <meta xmlns="urn:xmind:xmap:xmlns:meta:2.0" version="2.0">
-<Author><name>xmind-kityminder</name></Author>
+<Author><name>xmind-parser</name></Author>
 <Create><time>${new Date().toISOString()}</time></Create>
 </meta>`;
 }

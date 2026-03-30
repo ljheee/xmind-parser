@@ -1,16 +1,16 @@
 /**
- * xmind-kityminder
+ * xmind-parser
  * 完整的 XMind ↔ KityMinder JSON 双向转换库
  *
  * 浏览器 & Node.js 双端兼容
  *
  * 用法（Node.js）：
- *   import { xmindToKm, kmToXmind } from 'xmind-kityminder';
+ *   import { xmindToKm, kmToXmind } from 'xmind-parser';
  *   const km = await xmindToKm('/path/to/file.xmind');
  *   await kmToXmind(km, '/path/to/output.xmind', { format: 'xmind2020' });
  *
  * 用法（浏览器）：
- *   import { xmindBufferToKm, kmToXmindBuffer } from 'xmind-kityminder';
+ *   import { xmindBufferToKm, kmToXmindBuffer } from 'xmind-parser';
  *   // file: File 对象（来自 <input type="file">）
  *   const buffer = await file.arrayBuffer();
  *   const km = await xmindBufferToKm(buffer);

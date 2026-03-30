@@ -1,5 +1,5 @@
 /**
- * xmind-kityminder 测试套件
+ * xmind-parser 测试套件
  * 运行：node test/index.test.js
  */
 
