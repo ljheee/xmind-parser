@@ -1,0 +1,45 @@
+{
+  "name": "xmind-kityminder",
+  "version": "1.0.0",
+  "description": "Full-fidelity bidirectional converter between XMind (.xmind) and KityMinder (.km) JSON formats. Supports XMind 8 (XML) and XMind 2020+ (JSON), covering hyperlinks, notes, images, labels, markers, priority, progress, and styles.",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "files": [
+    "src/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node test/index.test.js"
+  },
+  "keywords": [
+    "xmind",
+    "kityminder",
+    "mindmap",
+    "converter",
+    "parser",
+    "xmind8",
+    "xmind2020",
+    "km",
+    "naotu"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.8.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "bugs": {
+    "url": ""
+  },
+  "homepage": "",
+  "dependencies": {
+    "@xmldom/xmldom": "^0.9.9"
+  }
+}

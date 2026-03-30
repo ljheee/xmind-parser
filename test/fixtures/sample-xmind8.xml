@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<xmap-content xmlns="urn:xmind:xmap:xmlns:content:2.0"
+  xmlns:fo="http://www.w3.org/1999/XSL/Format"
+  xmlns:svg="http://www.w3.org/2000/svg"
+  xmlns:xhtml="http://www.w3.org/1999/xhtml"
+  xmlns:xlink="http://www.w3.org/1999/xlink"
+  version="2.0">
+  <sheet id="sheet1" timestamp="1700000000000">
+    <title>Test Sheet</title>
+    <topic id="root1" timestamp="1700000000001" xlink:href="https://example.com" style-id="style-root">
+      <title>Root Topic</title>
+      <xhtml:img xhtml:src="xap:attachments/image1.png" svg:width="200" svg:height="150"/>
+      <notes>
+        <plain><![CDATA[This is a note for root topic.
+Multi-line note.]]></plain>
+      </notes>
+      <labels>
+        <label>tag1</label>
+        <label>tag2</label>
+      </labels>
+      <marker-refs>
+        <marker-ref marker-id="priority-1"/>
+        <marker-ref marker-id="task-half"/>
+        <marker-ref marker-id="smiley-happy"/>
+      </marker-refs>
+      <children>
+        <topics type="attached">
+          <topic id="child1" timestamp="1700000000002" branch="folded">
+            <title>Child 1 (folded)</title>
+            <notes>
+              <plain>Child note</plain>
+            </notes>
+            <children>
+              <topics type="attached">
+                <topic id="grandchild1" timestamp="1700000000003">
+                  <title>Grandchild 1</title>
+                  <marker-refs>
+                    <marker-ref marker-id="priority-3"/>
+                  </marker-refs>
+                </topic>
+              </topics>
+            </children>
+          </topic>
+          <topic id="child2" timestamp="1700000000004" xlink:href="xmind:#root1">
+            <title>Child 2 (internal link)</title>
+            <labels>
+              <label>important</label>
+            </labels>
+            <marker-refs>
+              <marker-ref marker-id="task-done"/>
+            </marker-refs>
+          </topic>
+          <topic id="child3" timestamp="1700000000005" structure-class="org.xmind.ui.logic.right">
+            <title>Child 3 (with structure)</title>
+          </topic>
+        </topics>
+        <topics type="detached">
+          <topic id="detached1" timestamp="1700000000006">
+            <title>Detached Topic</title>
+          </topic>
+        </topics>
+      </children>
+    </topic>
+  </sheet>
+  <sheet id="sheet2" timestamp="1700000000010">
+    <title>Second Sheet</title>
+    <topic id="root2" timestamp="1700000000011">
+      <title>Second Root</title>
+    </topic>
+  </sheet>
+</xmap-content>

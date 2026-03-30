@@ -1,0 +1,102 @@
+[
+  {
+    "id": "sheet1",
+    "class": "sheet",
+    "title": "Test Sheet 2020",
+    "rootTopic": {
+      "id": "root1",
+      "class": "topic",
+      "title": "Root Topic 2020",
+      "href": "https://example.com",
+      "notes": {
+        "plain": { "content": "This is a note.\nMulti-line." },
+        "realHTML": { "content": "<p>This is a note.<br/>Multi-line.</p>" }
+      },
+      "labels": ["tag1", "tag2"],
+      "markers": [
+        { "markerId": "priority-2" },
+        { "markerId": "task-quarter" },
+        { "markerId": "flag-red" }
+      ],
+      "image": {
+        "src": "xap:resources/image1.png",
+        "width": 200,
+        "height": 150
+      },
+      "style": {
+        "id": "style-root",
+        "properties": {
+          "fo:color": "#FF0000",
+          "fo:background-color": "#FFFF00",
+          "fo:font-size": "14pt",
+          "fo:font-weight": "bold",
+          "line-color": "#0000FF",
+          "shape-class": "org.xmind.topicShape.roundedRect"
+        }
+      },
+      "structureClass": "org.xmind.ui.logic.right",
+      "children": {
+        "attached": [
+          {
+            "id": "child1",
+            "class": "topic",
+            "title": "Child 1 (folded)",
+            "branch": "folded",
+            "notes": {
+              "plain": { "content": "Child note" }
+            },
+            "children": {
+              "attached": [
+                {
+                  "id": "grandchild1",
+                  "class": "topic",
+                  "title": "Grandchild 1",
+                  "markers": [{ "markerId": "priority-3" }]
+                }
+              ]
+            }
+          },
+          {
+            "id": "child2",
+            "class": "topic",
+            "title": "Child 2 (internal link)",
+            "href": "xmind:#root1",
+            "labels": ["important"],
+            "markers": [{ "markerId": "task-done" }]
+          },
+          {
+            "id": "child3",
+            "class": "topic",
+            "title": "Child 3 (no extras)"
+          }
+        ],
+        "detached": [
+          {
+            "id": "detached1",
+            "class": "topic",
+            "title": "Detached Topic"
+          }
+        ],
+        "summary": [
+          {
+            "id": "summary1",
+            "class": "topic",
+            "title": "Summary Topic"
+          }
+        ]
+      }
+    },
+    "relationships": [],
+    "summaries": []
+  },
+  {
+    "id": "sheet2",
+    "class": "sheet",
+    "title": "Second Sheet",
+    "rootTopic": {
+      "id": "root2",
+      "class": "topic",
+      "title": "Second Root"
+    }
+  }
+]
