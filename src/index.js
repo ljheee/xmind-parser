@@ -5,12 +5,12 @@
  * 浏览器 & Node.js 双端兼容
  *
  * 用法（Node.js）：
- *   import { xmindToKm, kmToXmind } from 'xmind-parser';
+ *   import { xmindToKm, kmToXmind } from '@ljheee/xmind-parser';
  *   const km = await xmindToKm('/path/to/file.xmind');
  *   await kmToXmind(km, '/path/to/output.xmind', { format: 'xmind2020' });
  *
  * 用法（浏览器）：
- *   import { xmindBufferToKm, kmToXmindBuffer } from 'xmind-parser';
+ *   import { xmindBufferToKm, kmToXmindBuffer } from '@ljheee/xmind-parser';
  *   // file: File 对象（来自 <input type="file">）
  *   const buffer = await file.arrayBuffer();
  *   const km = await xmindBufferToKm(buffer);
@@ -41,15 +41,26 @@ export { downloadArrayBuffer };
 export async function xmindBufferToKm(buffer, options = {}) {
   const files = await readZipAsync(buffer);
 
+  // 提取 ZIP 内的图片资源（resources/ 和 attachments/ 目录），供转换器内嵌为 base64
+  // 这样 xap:resources/xxx.png 路径会被替换为 data URL，图片不再丢失
+  const resources = {};
+  for (const [filename, data] of Object.entries(files)) {
+    if (filename.startsWith('resources/') || filename.startsWith('attachments/')) {
+      resources[filename] = data;
+    }
+  }
+  const optionsWithResources = { ...options, resources: Object.keys(resources).length > 0 ? resources : null };
+
   // 检测格式：优先 content.json（XMind 2020+），其次 content.xml（XMind 8）
   if (files[XMIND_CONTENT_JSON]) {
     const jsonStr = uint8ArrayToString(files[XMIND_CONTENT_JSON]);
-    return parseXmind2020Json(jsonStr, options);
+    return parseXmind2020Json(jsonStr, optionsWithResources);
   }
 
   if (files[XMIND_CONTENT_XML]) {
     const xmlStr = uint8ArrayToString(files[XMIND_CONTENT_XML]);
-    return parseXmind8Xml(xmlStr, options);
+    const commentsXml = files['comments.xml'] ? uint8ArrayToString(files['comments.xml']) : undefined;
+    return parseXmind8Xml(xmlStr, { ...optionsWithResources, commentsXml });
   }
 
   // 兼容：有些文件可能用不同大小写
@@ -59,11 +70,12 @@ export async function xmindBufferToKm(buffer, options = {}) {
 
   if (jsonKey) {
     const jsonStr = uint8ArrayToString(files[jsonKey]);
-    return parseXmind2020Json(jsonStr, options);
+    return parseXmind2020Json(jsonStr, optionsWithResources);
   }
   if (xmlKey) {
     const xmlStr = uint8ArrayToString(files[xmlKey]);
-    return parseXmind8Xml(xmlStr, options);
+    const commentsXml = files['comments.xml'] ? uint8ArrayToString(files['comments.xml']) : undefined;
+    return parseXmind8Xml(xmlStr, { ...optionsWithResources, commentsXml });
   }
 
   throw new Error(

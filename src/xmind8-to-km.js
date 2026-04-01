@@ -55,6 +55,9 @@ import {
  * @param {boolean} [options.firstSheetOnly=false] 只返回第一个画布
  * @param {boolean} [options.hideEmptyValue=true] 过滤空字段（减少体积）
  * @param {string} [options.commentsXml] comments.xml 内容（可选）
+ * @param {Object<string, Uint8Array>} [options.resources]
+ *   ZIP 包内的资源文件映射，键为文件路径（如 "attachments/xxx.png"）。
+ *   提供后，图片的 xap: 路径会被替换为 base64 data URL。
  * @returns {Promise<Array<{root, template, theme, version}>>}
  */
 export async function parseXmind8Xml(xmlString, options = {}) {
@@ -76,6 +79,8 @@ export async function parseXmind8Xml(xmlString, options = {}) {
     commentsMap = await parseCommentsXml(options.commentsXml);
   }
 
+  const resources = options.resources || null;
+
   const results = [];
   for (const sheet of sheets) {
     const km = KM_ROOT_TEMPLATE();
@@ -83,7 +88,7 @@ export async function parseXmind8Xml(xmlString, options = {}) {
 
     const rootTopicEl = getChild(sheet, 'topic');
     if (rootTopicEl) {
-      km.root = convertTopic8(rootTopicEl, commentsMap, hideEmptyValue);
+      km.root = convertTopic8(rootTopicEl, commentsMap, hideEmptyValue, resources);
     }
 
     results.push(km);
@@ -94,9 +99,25 @@ export async function parseXmind8Xml(xmlString, options = {}) {
 }
 
 /**
+ * 将 xap: 路径转换为 base64 data URL（与 xmind2020-to-km.js 中的实现相同）
+ */
+function resolveImageSrc(src, resources) {
+  if (!resources || !src) return src;
+  const zipPath = src.replace(/^xap:/, '');
+  const data = resources[zipPath];
+  if (!data) return src;
+  const ext = zipPath.split('.').pop().toLowerCase();
+  const mimeMap = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', svg: 'image/svg+xml', bmp: 'image/bmp' };
+  const mime = mimeMap[ext] || 'image/png';
+  let binary = '';
+  for (let i = 0; i < data.length; i++) binary += String.fromCharCode(data[i]);
+  return `data:${mime};base64,${btoa(binary)}`;
+}
+
+/**
  * 递归转换 XMind 8 topic 元素 → KityMinder 节点
  */
-function convertTopic8(topicEl, commentsMap, hideEmptyValue) {
+function convertTopic8(topicEl, commentsMap, hideEmptyValue, resources = null) {
   const node = { data: {}, children: [] };
   const data = node.data;
 
@@ -175,9 +196,10 @@ function convertTopic8(topicEl, commentsMap, hideEmptyValue) {
   //   新版 <image href="xap:attachments/xxx.png" width="200" height="150"/>
   //   旧版 <img src="xap:attachments/xxx.png" width="200" height="150"/>（已由预处理转换）
   // KityMinder 约定：data.image = URL字符串，data.imageSize = {width, height}
+  // 如果提供了 resources 映射，xap: 路径会被替换为 base64 data URL
   const imgInfo = findImageElement(topicEl);
   if (imgInfo) {
-    data.image = imgInfo.src;
+    data.image = resolveImageSrc(imgInfo.src, resources);
     if (imgInfo.width || imgInfo.height) {
       data.imageSize = {};
       if (imgInfo.width)  data.imageSize.width  = imgInfo.width;
@@ -217,20 +239,23 @@ function convertTopic8(topicEl, commentsMap, hideEmptyValue) {
       const type = getAttr(topicsEl, 'type');
       if (type === 'attached' || type === null) {
         for (const childTopic of getChildren(topicsEl, 'topic')) {
-          node.children.push(convertTopic8(childTopic, commentsMap, hideEmptyValue));
+          node.children.push(convertTopic8(childTopic, commentsMap, hideEmptyValue, resources));
         }
       } else if (type === 'detached') {
         for (const childTopic of getChildren(topicsEl, 'topic')) {
-          const child = convertTopic8(childTopic, commentsMap, hideEmptyValue);
+          const child = convertTopic8(childTopic, commentsMap, hideEmptyValue, resources);
           child.data['xmind-detached'] = true;
           node.children.push(child);
         }
       } else if (type === 'callout') {
         // callout：标注节点（XMind 8 也有此类型）
-        for (const childTopic of getChildren(topicsEl, 'topic')) {
-          const child = convertTopic8(childTopic, commentsMap, hideEmptyValue);
-          child.data['xmind-callout'] = true;
-          node.children.push(child);
+        // KityMinder 没有 callout 概念，将其文本内容合并到父节点的 note 中，避免多出子节点
+        const calloutTexts = getChildren(topicsEl, 'topic')
+          .map(t => getTextContent(getChild(t, 'title')))
+          .filter(Boolean);
+        if (calloutTexts.length > 0) {
+          const existing = data.note ? data.note + '\n\n' : '';
+          data.note = existing + calloutTexts.join('\n');
         }
       }
     }

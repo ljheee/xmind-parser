@@ -9,7 +9,7 @@ XMind ↔ KityMinder JSON 完整双向转换库。
 ## 安装
 
 ```bash
-npm install xmind-parser
+npm install @ljheee/xmind-parser
 ```
 
 Node.js 环境解析 XMind 8 XML 时需要：
@@ -25,7 +25,7 @@ npm install @xmldom/xmldom
 ### Node.js
 
 ```js
-import { xmindToKm, kmToXmind } from 'xmind-parser';
+import { xmindToKm, kmToXmind } from '@ljheee/xmind-parser';
 
 // XMind → KityMinder（自动检测 XMind 8 / 2020+）
 const sheets = await xmindToKm('./my-map.xmind');
@@ -41,7 +41,7 @@ await kmToXmind(sheets[0], './output-v8.xmind', { format: 'xmind8' });
 ### 浏览器
 
 ```js
-import { xmindBufferToKm, kmToXmindBuffer, downloadArrayBuffer } from 'xmind-parser';
+import { xmindBufferToKm, kmToXmindBuffer, downloadArrayBuffer } from '@ljheee/xmind-parser';
 
 // 读取用户上传的文件
 const file = document.querySelector('input[type=file]').files[0];
@@ -83,7 +83,7 @@ import {
   parseXmind2020Json,  // content.json 字符串/数组 → KM 数组
   kmToXmind8,          // KM → XMind 8 ZIP ArrayBuffer
   kmToXmind2020,       // KM → XMind 2020+ ZIP ArrayBuffer
-} from 'xmind-parser';
+} from '@ljheee/xmind-parser';
 ```
 
 ---

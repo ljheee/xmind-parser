@@ -741,20 +741,27 @@ async function runTests() {
         console.log(`     image = "${imgNode.data.image.slice(0, 60)}..."`);
       });
 
-      await test('callout 节点被正确解析（xmind-callout 标记）', async () => {
-        // naoTu.xmind 中有一个 callout 子节点
-        function findCallout(node) {
-          if (node.data['xmind-callout']) return node;
+      await test('callout 节点被合并到父节点的 note 中', async () => {
+        // naoTu.xmind 中"分支主题 4"有一个 callout 子节点，文本为"3333"
+        // 新行为：callout 不再作为子节点，而是合并到父节点的 data.note 中
+        function findNodeWithNote(node) {
+          if (node.data.note) return node;
           for (const c of node.children || []) {
-            const found = findCallout(c);
+            const found = findNodeWithNote(c);
             if (found) return found;
           }
           return null;
         }
-        const calloutNode = findCallout(sheets[0].root);
-        assert(calloutNode !== null, 'should find a callout node');
-        assert(calloutNode.data['xmind-callout'] === true, 'xmind-callout should be true');
-        console.log(`     callout text = "${calloutNode.data.text}"`);
+        const noteNode = findNodeWithNote(sheets[0].root);
+        assert(noteNode !== null, 'should find a node with note (from callout)');
+        assert(noteNode.data.note.includes('3333'), 'callout text "3333" should be in note');
+        // callout 不应再作为子节点出现
+        function hasCalloutChild(node) {
+          if (node.data['xmind-callout']) return true;
+          return (node.children || []).some(hasCalloutChild);
+        }
+        assert(!hasCalloutChild(sheets[0].root), 'no xmind-callout child nodes should exist');
+        console.log(`     callout merged into note = "${noteNode.data.note}"`);
       });
 
       await test('KM 结构完整（root/template/theme/version）', async () => {

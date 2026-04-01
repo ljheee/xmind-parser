@@ -32,6 +32,10 @@ import {
  * @param {string | Array} contentJson
  * @param {object} [options]
  * @param {boolean} [options.firstSheetOnly=false]
+ * @param {boolean} [options.hideEmptyValue=true]
+ * @param {Object<string, Uint8Array>} [options.resources]
+ *   ZIP 包内的资源文件映射，键为文件路径（如 "resources/xxx.png"）。
+ *   提供后，图片的 xap:resources/ 路径会被替换为 base64 data URL，实现图片内嵌。
  * @returns {Array<{root, template, theme, version, title}>}
  */
 export function parseXmind2020Json(contentJson, options = {}) {
@@ -44,6 +48,7 @@ export function parseXmind2020Json(contentJson, options = {}) {
   }
 
   const hideEmptyValue = options.hideEmptyValue !== false; // 默认 true
+  const resources = options.resources || null;
 
   const results = [];
   for (const sheet of sheets) {
@@ -52,7 +57,7 @@ export function parseXmind2020Json(contentJson, options = {}) {
 
     const rootTopic = sheet.rootTopic;
     if (rootTopic) {
-      km.root = convertTopic2020(rootTopic, hideEmptyValue);
+      km.root = convertTopic2020(rootTopic, hideEmptyValue, resources);
     }
 
     results.push(km);
@@ -63,9 +68,36 @@ export function parseXmind2020Json(contentJson, options = {}) {
 }
 
 /**
+ * 将 xap:resources/ 或 xap:attachments/ 路径转换为 base64 data URL
+ * @param {string} src - 原始路径，如 "xap:resources/xxx.png"
+ * @param {Object<string, Uint8Array>|null} resources - ZIP 内资源映射
+ * @returns {string} 转换后的 URL（data URL 或原始路径）
+ */
+function resolveImageSrc(src, resources) {
+  if (!resources || !src) return src;
+
+  // xap:resources/xxx.png → resources/xxx.png
+  // xap:attachments/xxx.png → attachments/xxx.png
+  const zipPath = src.replace(/^xap:/, '');
+  const data = resources[zipPath];
+  if (!data) return src; // 找不到资源，保留原始路径
+
+  // 根据文件扩展名判断 MIME 类型
+  const ext = zipPath.split('.').pop().toLowerCase();
+  const mimeMap = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', svg: 'image/svg+xml', bmp: 'image/bmp' };
+  const mime = mimeMap[ext] || 'image/png';
+
+  // Uint8Array → base64
+  let binary = '';
+  for (let i = 0; i < data.length; i++) binary += String.fromCharCode(data[i]);
+  const b64 = btoa(binary);
+  return `data:${mime};base64,${b64}`;
+}
+
+/**
  * 递归转换 XMind 2020 topic 对象 → KityMinder 节点
  */
-function convertTopic2020(topic, hideEmptyValue = true) {
+function convertTopic2020(topic, hideEmptyValue = true, resources = null) {
   const node = { data: {}, children: [] };
   const data = node.data;
 
@@ -120,10 +152,11 @@ function convertTopic2020(topic, hideEmptyValue = true) {
   // XMind 2020: topic.image = { src: "xap:resources/xxx.png", width: 100, height: 80 }
   // 或 topic.image = { url: "https://...", width: 100, height: 80 }
   // KityMinder 约定：data.image = URL字符串，data.imageSize = {width, height}
+  // 如果提供了 resources 映射，xap:resources/ 路径会被替换为 base64 data URL
   if (topic.image) {
-    const imgSrc = topic.image.src || topic.image.url || '';
-    if (imgSrc) {
-      data.image = imgSrc;
+    const rawSrc = topic.image.src || topic.image.url || '';
+    if (rawSrc) {
+      data.image = resolveImageSrc(rawSrc, resources);
       const w = topic.image.width;
       const h = topic.image.height;
       if (w || h) {
@@ -174,13 +207,13 @@ function convertTopic2020(topic, hideEmptyValue = true) {
     // attached: 主要子节点
     if (Array.isArray(topic.children.attached)) {
       for (const child of topic.children.attached) {
-        node.children.push(convertTopic2020(child, hideEmptyValue));
+        node.children.push(convertTopic2020(child, hideEmptyValue, resources));
       }
     }
     // detached: 浮动子节点（有损，记录但标记）
     if (Array.isArray(topic.children.detached)) {
       for (const child of topic.children.detached) {
-        const childNode = convertTopic2020(child, hideEmptyValue);
+        const childNode = convertTopic2020(child, hideEmptyValue, resources);
         childNode.data['xmind-detached'] = true;
         node.children.push(childNode);
       }
@@ -188,17 +221,21 @@ function convertTopic2020(topic, hideEmptyValue = true) {
     // summary: 概要节点（有损，记录但标记）
     if (Array.isArray(topic.children.summary)) {
       for (const child of topic.children.summary) {
-        const childNode = convertTopic2020(child, hideEmptyValue);
+        const childNode = convertTopic2020(child, hideEmptyValue, resources);
         childNode.data['xmind-summary'] = true;
         node.children.push(childNode);
       }
     }
     // callout: 标注节点（XMind 2020 Zen 特有）
-    if (Array.isArray(topic.children.callout)) {
-      for (const child of topic.children.callout) {
-        const childNode = convertTopic2020(child, hideEmptyValue);
-        childNode.data['xmind-callout'] = true;
-        node.children.push(childNode);
+    // KityMinder 没有 callout 概念，将其文本内容合并到父节点的 note 中，避免多出子节点
+    if (Array.isArray(topic.children.callout) && topic.children.callout.length > 0) {
+      const calloutTexts = topic.children.callout
+        .map(c => (c.title || '').trim())
+        .filter(Boolean);
+      if (calloutTexts.length > 0) {
+        // 如果父节点已有 note，追加到末尾；否则直接设置
+        const existing = data.note ? data.note + '\n\n' : '';
+        data.note = existing + calloutTexts.join('\n');
       }
     }
   }
