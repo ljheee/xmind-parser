@@ -159,11 +159,12 @@ function convertTopic2020(topic, hideEmptyValue = true, resources = null) {
       data.image = resolveImageSrc(rawSrc, resources);
       const w = topic.image.width;
       const h = topic.image.height;
-      if (w || h) {
-        data.imageSize = {};
-        if (w) data.imageSize.width  = w;
-        if (h) data.imageSize.height = h;
-      }
+      // KityMinder 的 ImageRenderer.update 依赖 imageSize 才会渲染图片，
+      // 若 xmind 文件未记录宽高，则使用默认值（与 KityMinder maxImageWidth/maxImageHeight 一致）
+      data.imageSize = {
+        width:  w || 200,
+        height: h || 200,
+      };
     }
   }
 
